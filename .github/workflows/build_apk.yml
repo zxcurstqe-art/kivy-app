@@ -10,33 +10,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip git zip unzip openjdk-17-jdk
+          sudo apt install -y \
+            git zip unzip openjdk-17-jdk \
+            build-essential python3-pip
 
-      - name: Install buildozer
+      - name: Install Python tools
         run: |
-          pip install --user buildozer cython
+          pip install --upgrade pip
+          pip install cython==0.29.36 buildozer==1.5.0
 
-      - name: Build APK
+      - name: Build APK (Kivy / Buildozer)
         run: |
           export PATH=$PATH:~/.local/bin
-          buildozer -v android debug --allow-root
-        env:
-          CI: true
+          export CI=1
+          yes | buildozer -v android debug --allow-root
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: apk
           path: bin/*.apk
-- name: Install dependencies
-  run: |
-    sudo apt update
-    sudo apt install -y git zip unzip openjdk-17-jdk build-essential python3-pip
-    pip install --upgrade pip
-    pip install cython==0.29.36 buildozer==1.5.0 kivy
