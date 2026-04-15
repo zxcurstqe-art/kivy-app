@@ -1,48 +1,36 @@
 name: Build APK
-
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch:  # Позволяет запускать сборку вручную через интерфейс GitHub
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    name: Build APK
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      # Шаг 1: Клонирование вашего кода из репозитория
+      - name: Checkout code
         uses: actions/checkout@v4
 
+      # Шаг 2: Настройка Python (не всегда обязательно, но полезно для предварительных скриптов)
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: '3.10'
 
-      - name: Install system deps
-        run: |
-          sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk build-essential
+      # Шаг 3: Сборка APK с помощью Buildozer
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          command: buildozer -v android debug
+          buildozer_version: stable
 
-      - name: Install buildozer
-        run: |
-          pip install --upgrade pip
-          pip install cython==0.29.36 buildozer==1.5.0
-
-      - name: Create non-root user (REAL FIX)
-        run: |
-          sudo useradd -m builder || true
-          sudo chown -R builder:builder $GITHUB_WORKSPACE
-
-      - name: Build APK as non-root user
-        run: |
-          sudo -u builder bash -c "
-            cd $GITHUB_WORKSPACE &&
-            export PATH=$PATH:$HOME/.local/bin &&
-            buildozer android debug
-          "
-
-      - name: Upload APK
+      # Шаг 4: Загрузка собранного APK как артефакта (вы сможете скачать его со страницы Actions)
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: apk
-          path: bin/*.apk
+          name: app-debug
+          path: ${{ steps.buildozer.outputs.filename }}
