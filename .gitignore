@@ -1,0 +1,6 @@
+.buildozer/
+bin/
+android-sdk/
+*.apk
+__pycache__/
+*.pyc
